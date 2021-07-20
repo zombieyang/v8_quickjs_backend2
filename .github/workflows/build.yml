@@ -7,7 +7,7 @@ on:
 jobs:
 
   build_window64:
-    name: Windows
+    name: Windows64
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
@@ -17,14 +17,14 @@ jobs:
     - name: Prepare
       run: |
         mkdir qjs/Lib/Win64/
-        copy win/build/Release/v8qjs.lib qjs/Lib/Win64/
+        copy build64/Release/v8qjs.lib qjs/Lib/Win64/
     - uses: actions/upload-artifact@v2
       with:
         name: qjs_v8
         path: qjs/**/*
         
   build_window32:
-    name: Windows
+    name: Windows32
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
     - name: Prepare
       run: |
         mkdir qjs/Lib/Win32/
-        copy win/build/Release/v8qjs.lib qjs/Lib/Win32/
+        copy build32/Release/v8qjs.lib qjs/Lib/Win32/
     - uses: actions/upload-artifact@v2
       with:
         name: qjs_v8
@@ -53,7 +53,7 @@ jobs:
         sh ./make_ios.sh
     - name: Prepare
       run: |
-        mkdir qjs/Lib/iOS/
+        mkdir -p qjs/Lib/iOS/
         cp build_ios/Release-iphoneos/libv8qjs.a qjs/Lib/iOS
     - uses: actions/upload-artifact@v2
       with:
@@ -73,7 +73,7 @@ jobs:
         sh ./make_osx.sh
     - name: Prepare
       run: |
-        mkdir qjs/Lib/macOS/
+        mkdir -p qjs/Lib/macOS/
         cp build_osx/libv8qjs.a qjs/Lib/macOS
     - uses: actions/upload-artifact@v2
       with:
@@ -91,7 +91,7 @@ jobs:
         sh ./make_android.sh
     - name: Prepare
       run: |
-        mkdir qjs/Lib/Android/
+        mkdir -p qjs/Lib/Android/
         cp build.Android.arm64-v8a/libv8qjs.a qjs/Lib/Android/arm64-v8a/
         cp build.Android.armeabi-v7a/libv8qjs.a qjs/Lib/Android/armeabi-v7a/
         cp build.Android.x86/libv8qjs.a qjs/Lib/Android/x86/
