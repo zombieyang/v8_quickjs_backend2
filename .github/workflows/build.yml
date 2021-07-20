@@ -95,7 +95,7 @@ jobs:
     - name: Run build script
       run: |
         cd $GITHUB_WORKSPACE
-        sh ./make_android.sh
+        ./make_android.sh
     - name: Prepare
       run: |
         mkdir -p qjs/Lib/Android/
