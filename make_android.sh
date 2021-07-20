@@ -14,13 +14,13 @@ fi
 function build() {
     API=$1
     ABI=$2
-    TOOLCHAIN_ANME=$3
+    TOOLCHAIN_NAME=$3
     BUILD_PATH=build.Android.${ABI}
-    cmake -H. -B${BUILD_PATH} -DANDROID_ABI=${ABI} -DCMAKE_TOOLCHAIN_FILE=${NDK}/build/cmake/android.toolchain.cmake -DANDROID_NATIVE_API_LEVEL=${API} -DANDROID_TOOLCHAIN=clang -DANDROID_TOOLCHAIN_NAME=${TOOLCHAIN_ANME}
+    cmake -H. -B${BUILD_PATH} -DANDROID_ABI=${ABI} -DCMAKE_TOOLCHAIN_FILE=${NDK}/build/cmake/android.toolchain.cmake -DANDROID_NATIVE_API_LEVEL=${API} -DANDROID_TOOLCHAIN=clang -DANDROID_TOOLCHAIN_NAME=${TOOLCHAIN_NAME}
     cmake --build ${BUILD_PATH} --config Release
 }
 
 build android-18 armeabi-v7a arm-linux-androideabi-4.9
-build android-18 arm64-v8a  arm-linux-androideabi-clang
+build android-18 arm64-v8a arm-linux-androideabi-clang
 build android-18 x86 x86-4.9
 
