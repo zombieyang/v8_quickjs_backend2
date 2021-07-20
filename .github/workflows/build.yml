@@ -98,7 +98,9 @@ jobs:
         ./make_android.sh
     - name: Prepare
       run: |
-        mkdir -p qjs/Lib/Android/
+        mkdir -p qjs/Lib/Android/arm64-v8a/
+        mkdir -p qjs/Lib/Android/armeabi-v7a/
+        mkdir -p qjs/Lib/Android/x86/
         cp build.Android.arm64-v8a/libv8qjs.a qjs/Lib/Android/arm64-v8a/
         cp build.Android.armeabi-v7a/libv8qjs.a qjs/Lib/Android/armeabi-v7a/
         cp build.Android.x86/libv8qjs.a qjs/Lib/Android/x86/
