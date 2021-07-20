@@ -5,19 +5,95 @@ on:
 
 jobs:
 
-  build_window_dll:
+  build_window64:
     name: Windows
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
     - name: Build
       run: |
-        cd win
         .\make_win64.bat
     - name: Prepare
       run: |
         mkdir qjs/Lib/Win64/
         copy win/build/Release/v8qjs.lib qjs/Lib/Win64/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: qjs_v8
+        path: qjs/**/*
+        
+  build_window32:
+    name: Windows
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        .\make_win32.bat
+    - name: Prepare
+      run: |
+        mkdir qjs/Lib/Win32/
+        copy win/build/Release/v8qjs.lib qjs/Lib/Win32/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: qjs_v8
+        path: qjs/**/*
+        
+  build_ios:
+    name: iOS
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Xcode 12.0 to use SDK 10.15
+      run: sudo xcode-select -switch "/Applications/Xcode_12.app"
+    - name: Run build script
+      run: |
+        cd $GITHUB_WORKSPACE
+        sh ./make_ios.sh
+    - name: Prepare
+      run: |
+        mkdir qjs/Lib/iOS/
+        cp build_ios/Release-iphoneos/libv8qjs.a qjs/Lib/iOS
+    - uses: actions/upload-artifact@v2
+      with:
+        name: qjs_v8
+        path: qjs/**/*
+        
+  build_macos:
+    name: macOS
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Xcode 12.0 to use SDK 10.15
+      run: sudo xcode-select -switch "/Applications/Xcode_12.app"
+    - name: Run build script
+      run: |
+        cd $GITHUB_WORKSPACE
+        sh ./make_osx.sh
+    - name: Prepare
+      run: |
+        mkdir qjs/Lib/macOS/
+        cp build_osx/libv8qjs.a qjs/Lib/macOS
+    - uses: actions/upload-artifact@v2
+      with:
+        name: qjs_v8
+        path: qjs/**/*
+        
+  build_android:
+    name: Android
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run build script
+      run: |
+        cd $GITHUB_WORKSPACE
+        sh ./make_android.sh
+    - name: Prepare
+      run: |
+        mkdir qjs/Lib/Android/
+        cp build.Android.arm64-v8a/libv8qjs.a qjs/Lib/Android/arm64-v8a/
+        cp build.Android.armeabi-v7a/libv8qjs.a qjs/Lib/Android/armeabi-v7a/
+        cp build.Android.x86/libv8qjs.a qjs/Lib/Android/x86/
     - uses: actions/upload-artifact@v2
       with:
         name: qjs_v8
