@@ -76,7 +76,7 @@ jobs:
         mkdir -p qjs/Lib/macOS/
         cp build_osx/libv8qjs.a qjs/Lib/macOS
         mkdir -p qjs/Inc/
-        cp include/**/* qjs/Inc/
+        cp -r include/**/* qjs/Inc/
     - uses: actions/upload-artifact@v2
       with:
         name: qjs_v8
