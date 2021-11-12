@@ -395,6 +395,30 @@ int String::WriteUtf8(Isolate* isolate, char* buffer) const {
     return (int)len;
 }
 
+Local<Script> UnboundScript::BindToCurrentContext()
+{
+    Script* script = new Script(
+        source_,
+        resource_name_,
+        buff,
+        len
+    );
+
+    return Local<Script>(script);
+}
+
+MaybeLocal<UnboundScript> ScriptCompiler::CompileUnboundScript(Isolate* Isolate, ScriptCompiler::Source* Source)
+{
+    UnboundScript* unboundScript = new UnboundScript(
+        Source->source_string_,
+        MaybeLocal<String>(Local<String>::Cast(Source->resource_name_)),
+        Source->cached_data_->data_,
+        Source->cached_data_->length_
+    );
+    
+    return MaybeLocal<UnboundScript>(Local<UnboundScript>(unboundScript));
+}
+
 //！！如果一个Local<String>用到这个接口了，就不能再传入JS
 MaybeLocal<Script> Script::Compile(
     Local<Context> context, Local<String> source,
@@ -425,9 +449,15 @@ MaybeLocal<Value> Script::Run(Local<Context> context) {
 
     String::Utf8Value source(isolate, source_);
     const char *filename = resource_name_.IsEmpty() ? "eval" : *String::Utf8Value(isolate, resource_name_.ToLocalChecked());
-    auto ret = JS_Eval(context->context_, *source, source.length(), filename, JS_EVAL_TYPE_GLOBAL);
 
-    return ProcessResult(isolate, ret);
+    if (len == 0) 
+    {
+        return ProcessResult(isolate, JS_Eval(context->context_, *source, source.length(), filename, JS_EVAL_TYPE_GLOBAL));
+    }
+    else
+    {
+        return ProcessResult(isolate, JS_EvalBuffer(context->context_, filename, buff, len));
+    }
 }
 
 Script::~Script() {

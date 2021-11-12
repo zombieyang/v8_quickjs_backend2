@@ -1478,6 +1478,18 @@ public:
     Local<Value> resource_name_;
 };
 
+class V8_EXPORT UnboundScript {
+public:
+    Local<Script> BindToCurrentContext();
+private:
+    friend class ScriptCompiler;
+    UnboundScript(Local<String> source, MaybeLocal<String> resource_name, const uint8_t* buffer, size_t length): 
+        source_(source), resource_name_(resource_name), buff(buffer), len(length) { }
+    Local<String> source_;
+    MaybeLocal<String> resource_name_;
+    const uint8_t* buff;
+    size_t len;
+};
 
 class V8_EXPORT HandleScope {
 public:
@@ -1540,11 +1552,51 @@ public:
         ScriptOrigin* origin = nullptr);
 
     V8_WARN_UNUSED_RESULT MaybeLocal<Value> Run(Local<Context> context);
-    
+    Script(): len(0) {}
     ~Script();
 private:
+    Script(Local<String> source, MaybeLocal<String> resource_name, const uint8_t* buffer, size_t length): 
+        source_(source), resource_name_(resource_name), buff(buffer), len(length) { }
     Local<String> source_;
     MaybeLocal<String> resource_name_;
+    const uint8_t* buff;
+    size_t len;
+
+friend class ScriptCompiler;
+friend class UnboundScript;
+};
+
+class V8_EXPORT ScriptCompiler {
+public:
+    struct V8_EXPORT CachedData {
+        CachedData()
+            : data_(nullptr),
+            length_(0) {}
+
+        CachedData(const uint8_t* data, size_t length): data_(data), length_(length) {}
+        ~CachedData();
+
+    private:
+        friend class ScriptCompiler;
+        const uint8_t* data_;
+        size_t length_;
+    };
+  
+    class Source {
+    public:
+        // Source takes ownership of CachedData.
+        V8_INLINE Source(Local<String> source_string, const ScriptOrigin& origin,
+                        CachedData* cached_data = nullptr): source_string_(source_string), resource_name_(origin.resource_name_), cached_data_(cached_data) {}
+
+    private:
+        friend class ScriptCompiler;
+        Local<String> source_string_;
+        Local<Value> resource_name_;
+        CachedData* cached_data_;
+    };
+
+    static V8_WARN_UNUSED_RESULT MaybeLocal<UnboundScript> CompileUnboundScript(
+        Isolate* isolate, Source* source);
 };
 
 class V8_EXPORT Message : Data {
