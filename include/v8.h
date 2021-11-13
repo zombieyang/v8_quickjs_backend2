@@ -196,6 +196,10 @@ public:
     }
     
     V8_INLINE void * GetUserData(Isolate * isolate) {
+        if (isolate == nullptr) 
+        {
+            return nullptr;
+        }
         return GetUserData_(isolate, val_->value_);
     }
     
