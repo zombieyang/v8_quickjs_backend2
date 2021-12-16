@@ -42,10 +42,13 @@ template<typename T>
 class FunctionCallbackInfo;
 class String;
 class TryCatch;
+class Module;
 class Script;
 class Message;
 class Value;
 class Primitive;
+
+class PrimitiveArray;
 class Boolean;
 class HandleScope;
 class BigInt;
@@ -57,6 +60,8 @@ class Int32;
 class EscapableHandleScope;
 class Array;
 class Name;
+
+class ScriptCompiler;
 
 class V8_EXPORT StartupData {
 public:
@@ -598,6 +603,13 @@ public:
     }
 };
 
+class V8_EXPORT PrimitiveArray {
+public:
+    V8_INLINE static Local<PrimitiveArray> New(Isolate* isolate, int length) {
+        return Local<PrimitiveArray>(new PrimitiveArray);
+    };
+};
+
 class V8_EXPORT Array : public Object {
 public:
     uint32_t Length() const;
@@ -724,7 +736,36 @@ private:
 
 typedef void (*PromiseRejectCallback)(PromiseRejectMessage message);
 
+
+class V8_EXPORT Module : public Data {
+ public:
+  Local<Value> GetException() const;
+
+  typedef MaybeLocal<Module> (*ResolveCallback)(Local<Context> context,
+                                                Local<String> specifier,
+                                                Local<Module> referrer);
+
+  V8_WARN_UNUSED_RESULT Maybe<bool> InstantiateModule(Local<Context> context,
+                                                      ResolveCallback callback);
+
+  V8_WARN_UNUSED_RESULT MaybeLocal<Value> Evaluate(Local<Context> context);
+
+ private:
+  JSValue* exception_;
+  friend class ScriptCompiler;
+  friend class Isolate;
+  JSModuleDef* module_;
+
+  Local<String> source_string_;
+  Local<Value> resource_name_;
+};
+
 class V8_EXPORT Isolate {
+private: 
+    friend class Module;
+    Module::ResolveCallback moduleResolver_;
+
+    static JSModuleDef* js_module_loader(JSContext* ctx, const char *name, void *opaque);
 public:
     static Isolate* current_;
     
@@ -989,7 +1030,7 @@ public:
             val_.DecRef(isolate_);
         }
         if (weak_) {
-            ObjectUserData* object_udata = reinterpret_cast<ObjectUserData*>(val_.GetUserData(isolate_));
+            ObjectUserData* object_udata = reinterpret_cast<ObjectUserData*>(val_.GetUserData(isolate_));            
             if (object_udata) {
                 object_udata->callback_ = nullptr;
                 object_udata->parameter_ = nullptr;
@@ -1475,25 +1516,27 @@ public:
         Local<Value> resource_name) : resource_name_(resource_name) {
     }
 
+    V8_INLINE ScriptOrigin(
+        Local<Value> resource_name,
+        Local<Integer> resource_line_offset,
+        Local<Integer> resource_column_offset,
+        Local<Boolean> resource_is_shared_cross_origin,
+        Local<Integer> script_id,
+        Local<Value> source_map_url,
+        Local<Boolean> resource_is_opaque,
+        Local<Boolean> is_wasm, Local<Boolean> is_module,
+        Local<PrimitiveArray> host_defined_options
+    ) : resource_name_(resource_name), is_module_(is_module) {}
+
     V8_INLINE Local<Value> ResourceName() const {
         return resource_name_;
     }
 
     Local<Value> resource_name_;
+
+    Local<Boolean> is_module_;
 };
 
-class V8_EXPORT UnboundScript {
-public:
-    Local<Script> BindToCurrentContext();
-private:
-    friend class ScriptCompiler;
-    UnboundScript(Local<String> source, MaybeLocal<String> resource_name, const uint8_t* buffer, size_t length): 
-        source_(source), resource_name_(resource_name), buff(buffer), len(length) { }
-    Local<String> source_;
-    MaybeLocal<String> resource_name_;
-    const uint8_t* buff;
-    size_t len;
-};
 
 class V8_EXPORT HandleScope {
 public:
@@ -1549,6 +1592,55 @@ V8_INLINE Value *EscapeValue_(Value* val, EscapableHandleScope* scope) {
     return reinterpret_cast<Value*>(&scope->prev_scope_->scope_value_);
 }
 
+class V8_EXPORT ScriptCompiler {
+public:
+  class Source {
+   public:
+    // Source takes ownership of CachedData.
+    Source(Local<String> source_string, const ScriptOrigin& origin);
+    ~Source();
+
+   private:
+    friend class ScriptCompiler;
+
+    Local<String> source_string;
+
+    Local<Value> resource_name;
+
+    // CachedData* cached_data;
+  };
+
+  enum CompileOptions {
+    kNoCompileOptions = 0,
+    kConsumeCodeCache,
+    kEagerCompile
+  };
+
+  enum NoCacheReason {
+    kNoCacheNoReason = 0,
+    kNoCacheBecauseCachingDisabled,
+    kNoCacheBecauseNoResource,
+    kNoCacheBecauseInlineScript,
+    kNoCacheBecauseModule,
+    kNoCacheBecauseStreamingSource,
+    kNoCacheBecauseInspector,
+    kNoCacheBecauseScriptTooSmall,
+    kNoCacheBecauseCacheTooCold,
+    kNoCacheBecauseV8Extension,
+    kNoCacheBecauseExtensionModule,
+    kNoCacheBecausePacScript,
+    kNoCacheBecauseInDocumentWrite,
+    kNoCacheBecauseResourceWithNoCacheHandler,
+    kNoCacheBecauseDeferredProduceCodeCache
+  };
+
+  static V8_WARN_UNUSED_RESULT MaybeLocal<Module> CompileModule(
+      Isolate* isolate, Source* source,
+      CompileOptions options = kNoCompileOptions,
+      NoCacheReason no_cache_reason = kNoCacheNoReason);
+
+};
+
 class V8_EXPORT Script : Data {
 public:
     static V8_WARN_UNUSED_RESULT MaybeLocal<Script> Compile(
@@ -1556,51 +1648,11 @@ public:
         ScriptOrigin* origin = nullptr);
 
     V8_WARN_UNUSED_RESULT MaybeLocal<Value> Run(Local<Context> context);
-    Script(): len(0) {}
+    
     ~Script();
 private:
-    Script(Local<String> source, MaybeLocal<String> resource_name, const uint8_t* buffer, size_t length): 
-        source_(source), resource_name_(resource_name), buff(buffer), len(length) { }
     Local<String> source_;
     MaybeLocal<String> resource_name_;
-    const uint8_t* buff;
-    size_t len;
-
-friend class ScriptCompiler;
-friend class UnboundScript;
-};
-
-class V8_EXPORT ScriptCompiler {
-public:
-    struct V8_EXPORT CachedData {
-        CachedData()
-            : data_(nullptr),
-            length_(0) {}
-
-        CachedData(const uint8_t* data, size_t length): data_(data), length_(length) {}
-        ~CachedData();
-
-    private:
-        friend class ScriptCompiler;
-        const uint8_t* data_;
-        size_t length_;
-    };
-  
-    class Source {
-    public:
-        // Source takes ownership of CachedData.
-        V8_INLINE Source(Local<String> source_string, const ScriptOrigin& origin,
-                        CachedData* cached_data = nullptr): source_string_(source_string), resource_name_(origin.resource_name_), cached_data_(cached_data) {}
-
-    private:
-        friend class ScriptCompiler;
-        Local<String> source_string_;
-        Local<Value> resource_name_;
-        CachedData* cached_data_;
-    };
-
-    static V8_WARN_UNUSED_RESULT MaybeLocal<UnboundScript> CompileUnboundScript(
-        Isolate* isolate, Source* source);
 };
 
 class V8_EXPORT Message : Data {
