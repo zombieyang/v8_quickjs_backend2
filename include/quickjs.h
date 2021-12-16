@@ -382,6 +382,8 @@ JS_BOOL JS_IsLiveObject(JSRuntime *rt, JSValueConst obj);
 JSContext *JS_NewContext(JSRuntime *rt);
 void JS_FreeContext(JSContext *s);
 JSContext *JS_DupContext(JSContext *ctx);
+void *JS_GetContextOpaque(JSContext *ctx);
+void JS_SetContextOpaque(JSContext *ctx, void *opaque);
 void *JS_GetContextOpaque2(JSContext *ctx);
 void JS_SetContextOpaque2(JSContext *ctx, void *opaque);
 JSRuntime *JS_GetRuntime(JSContext *ctx);
@@ -1098,6 +1100,17 @@ void JS_SetValHash(JSValue val, int32_t hash);
 typedef char* (*JS_OnBacktrace)(JSContext *ctx, char* backtrace);
 void JS_SetOnBacktraceeCallback(JS_OnBacktrace callback);
 
+#define Q4CC(ch0, ch1, ch2, ch3)                        \
+	((unsigned int) (unsigned char) (ch0) | ((unsigned int) (unsigned char) (ch1) << 8) | \
+	 ((unsigned int) (unsigned char) (ch2) << 16) | ((unsigned int) (unsigned char) (ch3) << 24))
+
+#define TAG_PIX1  (Q4CC('P', 'I', 'X', '1'))
+#define TAG_PIX2  (Q4CC('P', 'I', 'X', '2'))
+
+inline JS_BOOL JS_IsCompiled(const void *buf) {
+  unsigned int tag = *(unsigned  int*) buf;
+  return tag == TAG_PIX1 || tag == TAG_PIX2;
+}
 JSValue JS_EvalBuffer(JSContext* ctx, const char* name, const uint8_t* buff, size_t len);
 JSValue JS_LoadBuffer(JSContext* ctx, const char* name, const uint8_t* buff, size_t len);
 void JS_SetFunctionName(JSContext* ctx, JSValue func_obj, const char* name);
@@ -1148,6 +1161,7 @@ JSValue JS_MapSet(JSContext *ctx, JSValueConst this_val,
 JSValue JS_MapGet(JSContext *ctx, JSValueConst this_val,
                   JSValueConst key);
 void JS_MapClear(JSContext *ctx, JSValueConst this_val);
+JSValue JS_DupModule(JSContext *ctx, JSModuleDef* v);
 
 /*-------end fuctions for v8 api---------*/
 
