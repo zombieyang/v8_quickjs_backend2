@@ -650,6 +650,13 @@ Local<ArrayBuffer> ArrayBufferView::Buffer() {
     ab->value_ = JS_GetArrayBufferView(isolate->current_context_->context_, value_);
     return Local<ArrayBuffer>(ab);
 }
+
+std::shared_ptr<BackingStore> ArrayBuffer::GetBackingStore() {
+    BackingStore *ret = new BackingStore;
+    ret->data_ = JS_GetArrayBuffer(Isolate::current_->current_context_->context_, &ret->byte_length_, value_);
+    std::shared_ptr<BackingStore> ptr(ret);
+    return ptr;
+}
     
 size_t ArrayBufferView::ByteOffset() {
     size_t byte_offset;
