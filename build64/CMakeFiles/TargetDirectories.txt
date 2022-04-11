@@ -1,3 +1,0 @@
-D:/Code/puerts@pixui/v8_quickjs_backend2/build64/CMakeFiles/v8qjs.dir
-D:/Code/puerts@pixui/v8_quickjs_backend2/build64/CMakeFiles/ALL_BUILD.dir
-D:/Code/puerts@pixui/v8_quickjs_backend2/build64/CMakeFiles/ZERO_CHECK.dir
