@@ -1160,6 +1160,8 @@ JSValue JS_MapSet(JSContext *ctx, JSValueConst this_val,
                   JSValueConst key, JSValueConst value);
 JSValue JS_MapGet(JSContext *ctx, JSValueConst this_val,
                   JSValueConst key);
+JSValue JS_MapDelete(JSContext *ctx, JSValueConst this_val,
+                  JSValueConst key);
 void JS_MapClear(JSContext *ctx, JSValueConst this_val);
 JSValue JS_DupModule(JSContext *ctx, JSModuleDef* v);
 
