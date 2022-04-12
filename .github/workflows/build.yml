@@ -56,7 +56,7 @@ jobs:
     - name: Prepare
       run: |
         mkdir -p qjs/pixqjs/Lib/iOS/arm64/
-        cp build_ios/Release-iphoneos/libv8qjs.a qjs/pixqjs/Lib/arm64/iOS
+        cp build_ios/Release-iphoneos/libv8qjs.a qjs/pixqjs/Lib/iOS/arm64
     - uses: actions/upload-artifact@v2
       with:
         name: pixqjs_bin
