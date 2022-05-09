@@ -16,8 +16,8 @@ if ( WIN32 AND NOT CYGWIN AND NOT ( CMAKE_SYSTEM_NAME STREQUAL "WindowsStore" ) 
     endif ()
 endif ()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-rtti")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions")
 
 project(v8qjs)
 
